@@ -1,9 +1,18 @@
+"""
+import d1motor
+from machine import I2C, Pin
+i2c = I2C(Pin(5), Pin(4), freq=10000)
+m0 = d1motor.Motor(0, i2c)
+m1 = d1motor.Motor(1, i2c)
+m0.speed(5000)
+
+"""
 import ustruct
 
 
 _STATE_BRAKE = const(0)
-_STATE_LEFT = const(1) # clockwise
-_STATE_RIGHT = const(2) # counter-clockwise
+_STATE_RIGHT = const(1) # clockwise
+_STATE_LEFT = const(2) # counter-clockwise
 _STATE_STOP = const(3)
 _STATE_SLEEP = const(4)
 
@@ -20,18 +29,20 @@ class Motor:
         self._state = 0
         if standby_pin is not None:
             standby_pin.init(standby_pin.OUT, 0)
+        self.frequency(1000)
 
-    def pwm_frequency(self, frequency=None):
+    def frequency(self, frequency=None):
         if frequency is None:
             return self._pwm_frequency
         self._pwm_frequency = frequency
-        self.i2c.writeto_mem(self.address, 0x0f, ustruct.pack(">I", frequency))
+        self.i2c.writeto_mem(self.address, 0x00 | self.index,
+            ustruct.pack("<BH", 0x00, frequency))
 
     def update(self):
         if self.standby_pin is not None:
             self.standby_pin.value(not self._state == _STATE_SLEEP)
         self.i2c.writeto_mem(self.address, 0x10 | self.index,
-            ustruct.pack(">BH", self._state, self._speed))
+            ustruct.pack("<BH", self._state, self._speed))
 
     def speed(self, speed=None):
         if speed is None:
