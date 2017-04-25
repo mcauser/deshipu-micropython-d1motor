@@ -36,13 +36,13 @@ class Motor:
             return self._pwm_frequency
         self._pwm_frequency = frequency
         self.i2c.writeto_mem(self.address, 0x00 | self.index,
-            ustruct.pack("<BH", 0x00, frequency))
+            ustruct.pack(">BH", 0x00, frequency))
 
     def update(self):
         if self.standby_pin is not None:
             self.standby_pin.value(not self._state == _STATE_SLEEP)
         self.i2c.writeto_mem(self.address, 0x10 | self.index,
-            ustruct.pack("<BH", self._state, self._speed))
+            ustruct.pack(">BH", self._state, self._speed))
 
     def speed(self, speed=None):
         if speed is None:
